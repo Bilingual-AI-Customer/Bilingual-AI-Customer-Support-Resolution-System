@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Bilingual AI Customer Support</title>
+  <script>
+    try {
+      const t = localStorage.getItem("theme") ||
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="style.css?v=2">
+  <script src="script.js?v=2" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div id="scrim" class="scrim" hidden></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-icon">AI</div>
+      <div>
+        <h2>SupportAI</h2>
+        <p>Customer Support</p>
+      </div>
+    </div>
+
+    <nav aria-label="Main">
+      <a href="#/dashboard" data-nav="dashboard" class="nav-link active"><span class="nav-icon">▦</span>Dashboard</a>
+      <a href="#/complaints" data-nav="complaints" class="nav-link"><span class="nav-icon">▤</span>Complaints</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="status-dot"></span>
+      <span id="conn-status">System Demo</span>
+    </div>
+  </aside>
+
+  <main class="main-content" id="main">
+    <header class="topbar">
+      <button id="menu-btn" class="icon-button menu-btn" aria-label="Open menu" aria-controls="sidebar">☰</button>
+      <div class="topbar-title">
+        <h1 id="page-heading">Dashboard</h1>
+        <p>Manage customer complaints in Arabic and English.</p>
+      </div>
+      <div class="topbar-actions">
+        <button id="theme-toggle" class="icon-button" aria-label="Switch to dark mode" title="Toggle dark mode">🌙</button>
+        <div class="user-avatar" aria-label="Signed in as R">R</div>
+      </div>
+    </header>
+
+    <section id="view-dashboard" class="view active">
+      <div class="welcome-panel">
+        <div>
+          <span class="eyebrow">CUSTOMER SUPPORT WORKSPACE</span>
+          <h2>Welcome back!</h2>
+          <p>Track complaints and review AI-assisted responses.</p>
+        </div>
+        <a href="#/complaints" class="primary-button">View Complaints</a>
+      </div>
+
+      <div class="stats-grid">
+        <article class="stat-card">
+          <div class="stat-icon blue">▤</div>
+          <p>Total Complaints</p>
+          <h2 id="stat-total">0</h2>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon orange">◷</div>
+          <p>New Complaints</p>
+          <h2 id="stat-new">0</h2>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon purple">↻</div>
+          <p>Needs Follow-up</p>
+          <h2 id="stat-followup">0</h2>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon green">✓</div>
+          <p>Resolved</p>
+          <h2 id="stat-resolved">0</h2>
+        </article>
+      </div>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Recent Complaints</h2>
+            <p>Latest customer requests</p>
+          </div>
+          <a href="#/complaints" class="text-link">View all →</a>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>ID</th><th>Complaint</th><th>Priority</th><th>Status</th></tr>
+            </thead>
+            <tbody id="recent-body"></tbody>
+          </table>
+        </div>
+        <div id="dashboard-empty" class="empty-state" hidden>
+          <div class="empty-icon">▤</div>
+          <h3>No complaints yet</h3>
+          <p>New customer complaints will appear here.</p>
+        </div>
+      </section>
+    </section>
+
+    <section id="view-complaints" class="view">
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <h2>All Complaints</h2>
+            <p>Search, filter, and review customer complaints.</p>
+          </div>
+          <div class="heading-actions">
+            <span class="count-label" id="complaint-count">0 complaints</span>
+            <button id="export-csv" class="secondary-button">Export CSV</button>
+            <button id="add-complaint" class="primary-button">+ New complaint</button>
+          </div>
+        </div>
+
+        <div class="filters">
+          <div class="search-box">
+            <span aria-hidden="true">⌕</span>
+            <input id="search" type="search" placeholder="Search complaints…  ( / )" aria-label="Search complaints">
+          </div>
+          <select id="filter-status" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option value="New">New</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Needs Follow-up">Needs Follow-up</option>
+            <option value="Resolved">Resolved</option>
+          </select>
+          <select id="filter-priority" aria-label="Filter by priority">
+            <option value="">All Priorities</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+
+        <div id="complaints-loading" class="loading-message" hidden>Loading complaints…</div>
+
+        <div id="complaints-error" class="error-message" hidden>
+          <strong>Unable to load complaints.</strong>
+          <p>Check that the server is running, then try again.</p>
+          <button id="retry-load" class="secondary-button">Try again</button>
+        </div>
+
+        <div class="table-wrap" id="complaints-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th><button class="sort-btn" data-sort="id">ID <i></i></button></th>
+                <th>Complaint</th>
+                <th><button class="sort-btn" data-sort="category">Category <i></i></button></th>
+                <th><button class="sort-btn" data-sort="priority">Priority <i></i></button></th>
+                <th><button class="sort-btn" data-sort="status">Status <i></i></button></th>
+              </tr>
+            </thead>
+            <tbody id="complaints-body"></tbody>
+          </table>
+        </div>
+
+        <div id="empty" class="empty-state" hidden>
+          <div class="empty-icon">⌕</div>
+          <h3>No complaints found</h3>
+          <p>Try changing your search or filters.</p>
+          <button id="clear-filters" class="secondary-button">Clear filters</button>
+        </div>
+
+        <nav class="pager" id="pager" aria-label="Pagination" hidden>
+          <button id="prev-page" class="secondary-button">← Previous</button>
+          <span id="page-info"></span>
+          <button id="next-page" class="secondary-button">Next →</button>
+        </nav>
+      </section>
+    </section>
+
+    <section id="view-details" class="view">
+      <a href="#/complaints" class="back-link">← Back to Complaints</a>
+
+      <div class="details-layout">
+        <section class="panel complaint-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">CUSTOMER REQUEST</span>
+              <h2 id="d-title">Complaint Details</h2>
+            </div>
+            <span id="d-priority" class="badge p-High">High</span>
+          </div>
+
+          <div class="detail-block">
+            <span class="detail-label">Complaint Message</span>
+            <p id="d-text" dir="auto"></p>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail-block">
+              <span class="detail-label">Category</span>
+              <p id="d-category"></p>
+            </div>
+            <div class="detail-block">
+              <label class="detail-label" for="d-status-select">Status</label>
+              <select id="d-status-select" class="status-select">
+                <option>New</option>
+                <option>In Progress</option>
+                <option>Needs Follow-up</option>
+                <option>Resolved</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="detail-block">
+            <label class="detail-label" for="d-reply">Suggested Reply</label>
+            <textarea id="d-reply" rows="5" placeholder="Write a response..." dir="auto"></textarea>
+            <p class="helper-text"><span id="char-count">0</span> characters · Review before sending.</p>
+            <div class="button-row">
+              <button id="send-reply" class="primary-button">Save reply</button>
+              <button id="copy-reply" class="secondary-button">Copy</button>
+            </div>
+            <p id="reply-feedback" class="feedback-message" role="status" hidden></p>
+          </div>
+
+          <div class="detail-nav">
+            <button id="prev-complaint" class="secondary-button">← Previous</button>
+            <button id="next-complaint" class="secondary-button">Next →</button>
+          </div>
+        </section>
+
+        <aside class="panel ai-panel">
+          <div class="ai-heading">
+            <div class="ai-symbol">✦</div>
+            <div>
+              <h2>AI Analysis</h2>
+              <p>Automated complaint insights</p>
+            </div>
+          </div>
+
+          <div class="detail-block">
+            <span class="detail-label">Predicted Category</span>
+            <p id="d-ai-category"></p>
+          </div>
+
+          <div class="detail-block">
+            <span class="detail-label">Model Confidence</span>
+            <div class="confidence-row">
+              <strong id="d-ai-conf">0%</strong>
+              <span>Confidence</span>
+            </div>
+            <div class="progress-track">
+              <div id="confidence-bar" class="progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="detail-block">
+            <span class="detail-label">Knowledge Sources</span>
+            <ul id="d-sources" class="sources-list"></ul>
+          </div>
+
+          <div class="notice">
+            <strong>Human review required</strong>
+            <p>AI suggestions should be checked before a response is sent.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="new-dialog" aria-labelledby="new-title">
+    <form method="dialog" id="new-form">
+      <h2 id="new-title">New complaint</h2>
+      <label for="n-text">Complaint message</label>
+      <textarea id="n-text" rows="4" dir="auto" required placeholder="اكتب الشكوى هنا / Type the complaint…"></textarea>
+      <div class="detail-grid">
+        <div>
+          <label for="n-category">Category</label>
+          <select id="n-category">
+            <option>Shipping &amp; Delivery</option>
+            <option>Payments &amp; Billing</option>
+            <option>Products</option>
+            <option>Account</option>
+            <option>Customer Service</option>
+          </select>
+        </div>
+        <div>
+          <label for="n-priority">Priority</label>
+          <select id="n-priority">
+            <option>High</option>
+            <option selected>Medium</option>
+            <option>Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="button-row dialog-actions">
+        <button type="button" id="n-cancel" class="secondary-button">Cancel</button>
+        <button type="submit" class="primary-button">Add complaint</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
