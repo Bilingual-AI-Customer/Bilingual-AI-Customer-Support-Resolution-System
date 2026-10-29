@@ -111,3 +111,40 @@ The ~43-point gap between micro and macro IS the hidden failure, now visible.
 
 ### 2.4 Verification
 `ml/evaluation/metrics_101.py` reproduces scenarios A-D in pure Python.
+
+## 3. Per-Language Evaluation — No Pooled Numbers for Decisions
+
+### 3.1 Why pooling languages hides the problem
+Arabic and English differ in morphology, tokenization and dialects
+(MSA vs Egyptian Arabic). A model can be excellent on English and
+collapse on Arabic while the pooled metric still looks "acceptable".
+
+Worked example (20 tickets, 2 categories):
+
+| Bucket | payment P/R/F1 | delivery P/R/F1 | Macro F1 |
+|---|---|---|---:|
+| English | 83% / 100% / 90.9% | 100% / 80% / 88.9% | **89.9%** |
+| Arabic  | 43% / 60% / 50.0%  | 33% / 20% / 25.0%  | **37.5%** |
+| Pooled  | 62% / 80% / 69.6%  | 71% / 50% / 58.8%  | 64.2% |
+
+Pooled says 64.2% ("needs work"). The split says: English is healthy,
+Arabic has collapsed — an actionable finding, not a vague one.
+
+### 3.2 Rules for this project
+1. Every metric (Macro F1, per-class Precision/Recall) is computed
+   separately per language bucket: `en`, `ar-msa`, `ar-eg`.
+2. The decision number per language is Macro F1; per-class P/R are
+   reported next to it.
+3. Minimum support: a language x category cell with fewer than 30 test
+   samples is labeled "pilot" and excluded from final decisions.
+4. The `language` field in the unified schema (ticket_id, text, language,
+   category, priority, status) must be validated by a sampling audit —
+   wrong language tags poison every per-language metric.
+5. Arabic has two varieties (MSA + Egyptian). They are evaluated as
+   separate buckets; a pooled "Arabic" number may be reported but never
+   used alone for decisions.
+
+### 3.3 Dependency note
+`ar-msa` test data: ArBanking77 (same 77 intents). `ar-eg` test data:
+hand-labeled Egyptian reviews — owned by Member 1. Until it lands,
+Arabic numbers are pilot-only.
