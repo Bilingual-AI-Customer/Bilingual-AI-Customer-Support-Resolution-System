@@ -1,0 +1,58 @@
+{
+  "payment": [
+    {
+      "intent": "Refund_not_showing_up",
+      "text": "A refund for a recent return has not arrived on my card."
+    },
+    {
+      "intent": "apple_pay_or_google_pay",
+      "text": "Am I able to do top-ups with Google Pay?"
+    },
+    {
+      "intent": "automatic_top_up",
+      "text": "Are there any hidden limit on the auto top-up?"
+    }
+  ],
+  "account": [
+    {
+      "intent": "activate_my_card",
+      "text": "Can I get some help activating my new card?"
+    },
+    {
+      "intent": "age_limit",
+      "text": "Am I able to open an account for my children?"
+    },
+    {
+      "intent": "card_about_to_expire",
+      "text": "Are there any express fees if i want my new card faster?"
+    }
+  ],
+  "technical": [
+    {
+      "intent": "atm_support",
+      "text": "Am I limited to what ATM I can use my card?"
+    },
+    {
+      "intent": "card_linking",
+      "text": "Can I add a card that I just found (again) to the app?"
+    },
+    {
+      "intent": "card_not_working",
+      "text": "Can you help me with my card, I think it's broke."
+    }
+  ],
+  "delivery": [
+    {
+      "intent": "card_acceptance",
+      "text": "Any place that takes Mastercard would be fine."
+    },
+    {
+      "intent": "card_arrival",
+      "text": "2 weeks ago I ordered my new card.  It isn't here.  What should I do?"
+    },
+    {
+      "intent": "card_delivery_estimate",
+      "text": "Are the delivery days flexible?  My schedule only allows me to be a available on specific dates."
+    }
+  ]
+}
