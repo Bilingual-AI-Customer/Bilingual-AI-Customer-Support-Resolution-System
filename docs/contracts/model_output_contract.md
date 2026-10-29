@@ -1,7 +1,7 @@
 # Contract: Model Output Format (ML -> Backend API)
 
 **Parties:** Hesham (Member 2, ML & Evaluation) <-> Member 4 (Backend)
-**Status:** Draft v1.0 - Week 1
+**Status:** Draft v1.1 - Week 1
 **Source of truth:** docs/success_metrics.md (Sections 4.2, 4.4)
 **Change process:** any change to this file needs both signatures below.
 
@@ -31,8 +31,14 @@ Example:
 }
 
 ## 3. Decision rule (fixed in week 1)
-- confidence >= 0.80 AND (top1 - top2) >= 0.10  ->  auto
-- otherwise                                     ->  human_review
+- confidence >= 0.80  ->  auto
+- otherwise           ->  human_review
+
+Note (v1.1): v1.0 also required (top1 - top2) >= 0.10. That condition is
+automatically satisfied whenever confidence >= 0.55 (since top2 <= 1 - top1),
+so at T = 0.80 both rules are identical - verified on the baseline:
+coverage 65.0% either way. If T is ever lowered below ~0.55, the margin
+condition should be re-evaluated in a new version of this contract.
 
 ## 4. Backend obligations (Member 4)
 1. human_review tickets must reach a human agent; the backend must NOT
@@ -46,7 +52,7 @@ Example:
 2. Threshold T=0.80 is provisional; retuning happens only with data and
    is announced in a new version of this contract first.
 
-## Sign-of
+## Sign-off
 | Role | Name | Date | Confirmed |
 |---|---|---|---|
 | ML & Evaluation | Hesham | 2026-10-30 | yes |
