@@ -2,7 +2,7 @@
 
 **Project:** Bilingual AI Customer Support & Resolution System
 **Owner:** Hesham — Member 2 (Evaluation & ML Models)
-**Status:** Draft v0.1 (Week 1) — Section 1 of 4
+**Status:** Draft v0.2 (Week 1) — Sections 1-4 complete
 **Scope:** Classification (payment / account / technical / delivery) x Languages (English, MSA Arabic, Egyptian Arabic)
 
 ---
@@ -60,9 +60,6 @@ accuracy while its recall on account, technical and delivery is 0%.
   Precision and Recall.
 - Every metric is computed **per language separately** (Section 3).
 - Confidence threshold and human-handoff rule are defined in Section 4.
-
-*(Sections 2-4 — Macro F1/P/R in practice, per-language evaluation,
-confidence & handoff — to be added to this draft.)*
 
 ## 2. The Metrics We Use — Precision, Recall, F1 in Plain Language
 
@@ -148,3 +145,57 @@ Arabic has collapsed — an actionable finding, not a vague one.
 `ar-msa` test data: ArBanking77 (same 77 intents). `ar-eg` test data:
 hand-labeled Egyptian reviews — owned by Member 1. Until it lands,
 Arabic numbers are pilot-only.
+
+## 4. Confidence & Human Handoff
+
+### 4.1 Why raw predictions are not enough
+The classifier outputs a probability per category. A prediction at 51%
+confidence is a guess, and routing a customer ticket on a guess
+misroutes it. Every model output therefore carries a **confidence**
+and a **decision**.
+
+### 4.2 The mechanism
+- confidence = highest category probability of the model
+- confidence >= T  ->  auto-route
+- confidence <  T  ->  human_review (top guess attached as suggestion)
+
+### 4.3 Choosing T with data, not vibes
+Bucket a validation run by confidence and measure accuracy per bucket
+(simulated numbers for illustration):
+
+| Confidence bin | Tickets | Accuracy |
+|---|---:|---:|
+| 0.90 - 1.00 | 100 | 95.0% |
+| 0.80 - 0.90 |  80 | 87.5% |
+| 0.70 - 0.80 |  60 | 70.0% |
+| 0.50 - 0.70 | 100 | 50.0% |
+
+Threshold scan (rule: smallest T with >= 90% accuracy on routed):
+
+| T | Coverage (auto-routed) | Accuracy on routed |
+|---:|---:|---:|
+| 0.50 | 100% | 75.6% |
+| 0.60 | 70.6% | 86.3% |
+| 0.70 | 70.6% | 86.3% |
+| 0.80 | **52.9%** | **91.7%** |
+| 0.90 | 29.4% | 95.0% |
+
+**Decision: T = 0.80 (provisional)** — about 53% of tickets answered
+automatically at 91.7% accuracy; everything riskier reaches a human.
+
+### 4.4 Project rules
+1. Model output fields (basis of the API contract with Member 4):
+   predicted_category, confidence, decision (auto | human_review).
+2. T = 0.80 provisional, re-tuned on real validation data, per language
+   (Arabic likely needs a higher T — see Section 3).
+3. Ambiguity guard: if top-1 and top-2 probabilities differ by < 0.10,
+   force human_review regardless of T.
+4. human_review tickets always keep the model suggestion attached.
+
+### 4.5 Metrics reporting summary
+| Metric | Role |
+|---|---|
+| Macro F1 per language | PRIMARY decision metric |
+| Per-class Precision / Recall | Diagnosis, next to Macro F1 |
+| Coverage & accuracy at T | Automation quality |
+| Accuracy / Micro F1 | Reference only |
