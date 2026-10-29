@@ -63,3 +63,51 @@ accuracy while its recall on account, technical and delivery is 0%.
 
 *(Sections 2-4 — Macro F1/P/R in practice, per-language evaluation,
 confidence & handoff — to be added to this draft.)*
+
+## 2. The Metrics We Use — Precision, Recall, F1 in Plain Language
+
+### 2.1 Judging ONE category
+For any category (say **delivery**), each prediction is one of:
+- **TP** — real delivery ticket, model routed it correctly
+- **FP** — not delivery, but model routed it there (false alarm, wasted agent time)
+- **FN** — real delivery ticket the model missed (ignored customer)
+
+| Metric | Formula | Question it answers | Who it protects |
+|---|---|---|---|
+| Precision | TP / (TP+FP) | Of tickets routed to delivery, how many were truly delivery? | The team (noise) |
+| Recall | TP / (TP+FN) | Of all real delivery tickets, how many did we catch? | The customer (silence) |
+| F1 | harmonic mean of P & R | One balanced number per category | Both (punishes one-sided models) |
+
+### 2.2 Worked examples (100 tickets, 20 real delivery)
+**Scenario A — healthy model:** flags 15 tickets, 12 correct.
+Precision = 12/15 = **80%**, Recall = 12/20 = **60%**, F1 = **68.6%**.
+
+**Scenario B — the precision trap:** flags only 5, all 5 correct.
+Precision = 5/5 = **100%**, Recall = 5/20 = **25%**, F1 = **40%**.
+A "100% precise" model that abandons 15 of 20 delivery complaints is NOT a success.
+
+**Scenario C — the recall trap:** flags 35, catches all 20 real (+15 false alarms).
+Precision = 20/35 = **57%**, Recall = **100%**, F1 = **72.7%**.
+Catches everything but floods the team with noise.
+
+**Lesson: Precision and Recall are trade-offs; F1 exposes one-sided models
+that either metric alone would flatter.**
+
+### 2.3 Why MACRO F1 is our primary metric
+In single-label multiclass, Micro-F1 equals accuracy. Re-run the Section-1
+dummy model (90 payment + 10 delivery, always predicts "payment"):
+
+| Aggregation | Value |
+|---|---:|
+| Micro F1 (= accuracy) | 90% |
+| Macro F1 (mean of per-class F1: payment 94.7%, delivery 0%) | **47.4%** |
+
+The ~43-point gap between micro and macro IS the hidden failure, now visible.
+
+- **Macro F1** → every category counts equally → **PRIMARY metric**.
+- Weighted F1 → dominated by majority classes → same hiding problem as
+  accuracy → rejected.
+- Accuracy / Micro F1 → reported for reference only (see Section 1).
+
+### 2.4 Verification
+`ml/evaluation/metrics_101.py` reproduces scenarios A-D in pure Python.
