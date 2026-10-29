@@ -6,6 +6,7 @@ Evaluates exactly per docs/success_metrics.md:
   - Macro F1 (primary) + per-class Precision/Recall
   - Language bucket: en (ar-msa / ar-eg pending data - doc 3.3)
   - Confidence gate T=0.80: coverage & accuracy on auto-routed (doc 4)
+  - Full threshold scan T=0.50..0.90 (real numbers for doc 4.3)
 
 Run from repo root:  python ml/baseline/train_baseline.py
 Requires: python -m pip install pandas scikit-learn
@@ -23,6 +24,7 @@ DATA = Path("data/banking77")
 OUT = Path("ml/baseline")
 CATEGORIES = ["account", "delivery", "payment", "technical"]
 T = 0.80  # provisional threshold - metrics doc Section 4
+SCAN = [0.50, 0.60, 0.70, 0.80, 0.90]
 
 # ---------- load ----------
 train = pd.read_csv(DATA / "train.csv")
@@ -82,6 +84,20 @@ print(f"Coverage (auto-routed)  : {coverage:.1%}")
 print(f"Accuracy on routed      : {routed_acc:.4f}")
 print(f"Human review load       : {(~routed).mean():.1%}")
 
+# ---------- threshold scan (real numbers, metrics doc Section 4.3) ----------
+print()
+print("=" * 60)
+print("THRESHOLD SCAN (rule: confidence >= T -> auto-route)")
+print("=" * 60)
+print("T      Coverage   Acc on routed   Human load")
+scan_rows = []
+for t in SCAN:
+    r = confidence >= t
+    acc = is_correct[r].mean() if r.any() else 0.0
+    cov, hl = r.mean(), 1 - r.mean()
+    scan_rows.append((t, cov, acc, hl))
+    print(f"{t:.2f}   {cov:>7.1%}   {acc:>9.2%}      {hl:>7.1%}")
+
 # ---------- save evidence ----------
 report = classification_report(y_true, pred, labels=CATEGORIES,
                                zero_division=0)
@@ -96,7 +112,15 @@ lines = [
     f"- Overall accuracy (reference only): {overall_acc:.4f}\n",
     f"- Confidence gate T={T:.2f}: coverage {coverage:.1%},",
     f" accuracy on routed {routed_acc:.4f}\n",
-    "\n## Per-class report\n\n```\n", report, "\n```\n",
+    "\n## Threshold scan (real, test n=3,080)\n",
+    "\n| T | Coverage | Accuracy on routed | Human load |",
+    "\n|---:|---:|---:|---:|\n",
 ]
+for t, cov, acc, hl in scan_rows:
+    lines.append(f"| {t:.2f} | {cov:.1%} | {acc:.2%} | {hl:.1%} |\n")
+lines.append("\nGate decision: T=0.80 provisional (metrics doc 4.3).\n")
+lines.append("\n## Per-class report\n\n```\n")
+lines.append(report)
+lines.append("\n```\n")
 (OUT / "results.md").write_text("".join(lines))
 print(f"\nSaved: {OUT / 'results.md'}")
