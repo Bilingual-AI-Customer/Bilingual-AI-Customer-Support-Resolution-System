@@ -1,4 +1,14 @@
 services:
+  backend:
+    build:
+      context: ./backend
+    container_name: customer_support_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
   db:
     image: postgres:16
     container_name: customer_support_db
