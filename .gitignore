@@ -24,3 +24,5 @@ mlartifacts/
 Thumbs.db
 .idea/
 .vscode/
+.env.*
+!.env.example
