@@ -26,6 +26,7 @@ build_egyptian_train.py
 """
 import os
 import re
+import sys
 import argparse
 import pandas as pd
 
@@ -114,6 +115,11 @@ def evidence(text):
 
 
 def main():
+    # Windows consoles default to cp1256 and crash on emoji in the
+    # sample prints. Both CSVs are already written; keep prints non-fatal.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", default="data/egyptian_reviews/eg_complaints_final.csv")
     ap.add_argument("--out-dir", default="data/egyptian_reviews")
