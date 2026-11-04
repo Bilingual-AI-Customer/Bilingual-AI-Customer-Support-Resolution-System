@@ -26,3 +26,6 @@ Thumbs.db
 .vscode/
 .env.*
 !.env.example
+data/**
+!data/**/
+!data/**/.gitkeep
